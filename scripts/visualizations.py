@@ -23,15 +23,43 @@ def plot_categorical_distribution(data, column_name):
     plt.title(f'Distribution of {column_name}')
     plt.xticks(rotation=45)
     plt.show()
-def plot_scatter(data, x_column, y_column, title, x_label, y_label):
-    """Plots a scatter plot to visualize the relationship between two numerical columns."""
+def plot_scatter(data, x_column, y_column, title, x_label, y_label, geographic_column=None, palette='viridis'):
+    """
+    Plots a scatter plot to visualize the relationship between two numerical columns.
+    Optionally, colors the points by a geographic or categorical column.
+    
+    Parameters:
+    - data: DataFrame containing the data
+    - x_column: The column for the x-axis
+    - y_column: The column for the y-axis
+    - title: Title of the plot
+    - x_label: Label for the x-axis
+    - y_label: Label for the y-axis
+    - geographic_column: Optional column to color the points by (e.g., ZipCode or other categorical columns)
+    - palette: Color palette for the scatter plot (default is 'viridis')
+    """
     plt.figure(figsize=(8, 5))
-    sns.scatterplot(data=data, x=x_column, y=y_column, alpha=0.6)
+    
+    if geographic_column:
+        # If a geographic column is provided, color the points based on that column
+        sns.scatterplot(data=data, x=x_column, y=y_column, hue=geographic_column, palette=palette, alpha=0.6)
+    else:
+        # If no geographic column is provided, plot without coloring
+        sns.scatterplot(data=data, x=x_column, y=y_column, alpha=0.6)
+    
+    # Set the title and labels
     plt.title(title)
     plt.xlabel(x_label)
     plt.ylabel(y_label)
+    
+    # Show legend if coloring by geographic column
+    if geographic_column:
+        plt.legend(title=geographic_column, loc='upper left')
+    
+    # Adjust layout and show plot
     plt.tight_layout()
     plt.show()
+
 def plot_geographic_trends(data, geographic_column, comparison_column, title, x_label, y_label, top_n=10):
     """Plots trends over geographic regions (e.g., PostalCode) comparing TotalPremium and CoverType."""
     # Group by the geographic column and calculate the mean of the comparison column
