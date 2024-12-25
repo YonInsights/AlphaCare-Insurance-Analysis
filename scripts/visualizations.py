@@ -32,4 +32,20 @@ def plot_scatter(data, x_column, y_column, title, x_label, y_label):
     plt.ylabel(y_label)
     plt.tight_layout()
     plt.show()
+def plot_geographic_trends(data, geographic_column, comparison_column, title, x_label, y_label, top_n=10):
+    """Plots trends over geographic regions (e.g., PostalCode) comparing TotalPremium and CoverType."""
+    # Group by the geographic column and calculate the mean of the comparison column
+    grouped_data = data.groupby(geographic_column)[comparison_column].mean().reset_index()
 
+    # Sort by the comparison column and pick top_n regions for visualization
+    grouped_data = grouped_data.sort_values(by=comparison_column, ascending=False).head(top_n)
+
+    # Plotting the trends
+    plt.figure(figsize=(12, 6))
+    sns.barplot(data=grouped_data, x=geographic_column, y=comparison_column, palette='viridis', hue=geographic_column)
+    plt.title(title)
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.xticks(rotation=45, ha='right')  # Rotate labels to prevent overlapping
+    plt.tight_layout()
+    plt.show()
