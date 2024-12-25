@@ -30,9 +30,6 @@ def check_missing_values(df):
     pandas.Series: A series containing the number of missing values per column.
     """
     return df.isnull().sum()
-# File: src/detect_outliers.py
-
-
 def remove_outliers(data, column):
     """
     Removes rows where the specified column contains outliers based on IQR method.
@@ -60,3 +57,18 @@ def remove_outliers(data, column):
     
     return cleaned_data
 
+def calculate_monthly_changes(data, group_by_column, value_column):
+    """
+    Calculate the monthly change in a given value column, grouped by a specific column (e.g., 'PostalCode').
+    
+    Parameters:
+    - data: DataFrame containing the data
+    - group_by_column: Column to group by (e.g., 'PostalCode')
+    - value_column: Column to calculate the monthly change for (e.g., 'TotalPremium', 'TotalClaims')
+    
+    Returns:
+    - DataFrame with the original data and a new column for monthly changes
+    """
+    data = data.sort_values(by=[group_by_column, 'TransactionMonth'])
+    data[f'{value_column}_Change'] = data.groupby(group_by_column)[value_column].diff().fillna(0)
+    return data
