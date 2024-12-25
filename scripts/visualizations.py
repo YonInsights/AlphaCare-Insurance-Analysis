@@ -1,8 +1,6 @@
-# File: src/visualize_outliers.py
-
+#importing the necessary libraries
 import matplotlib.pyplot as plt
 import seaborn as sns
-
 def plot_boxplot(data, column_name):
     """
     This function generates a boxplot to visualize the distribution of a given column,
@@ -77,3 +75,24 @@ def plot_geographic_trends(data, geographic_column, comparison_column, title, x_
     plt.xticks(rotation=45, ha='right')  # Rotate labels to prevent overlapping
     plt.tight_layout()
     plt.show()
+
+
+def plot_correlation_matrix(data, columns, title="Correlation Matrix"):
+    """
+    Plots the correlation matrix for the specified columns.
+    
+    Parameters:
+    - data: DataFrame containing the data.
+    - columns: List of columns to include in the correlation matrix.
+    - title: Title for the plot.
+    """
+    # Calculate the correlation matrix
+    correlation_matrix = data[columns].corr()
+
+    # Plot the correlation matrix using seaborn's heatmap
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(correlation_matrix, annot=True, cmap="coolwarm", vmin=-1, vmax=1, center=0)
+    plt.title(title)
+    plt.tight_layout()
+    plt.show()
+
