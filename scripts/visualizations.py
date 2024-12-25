@@ -16,3 +16,11 @@ def plot_boxplot(data, column_name):
     sns.boxplot(data=data, x=column_name, color='skyblue')
     plt.title(f'Boxplot of {column_name}')
     plt.show()
+def plot_categorical_distribution(data, column_name):
+    """Plots a bar chart for categorical variable distribution."""
+    plt.figure(figsize=(10, 6))
+    sns.countplot(data=data, x=column_name, palette="Set2")
+    plt.title(f'Distribution of {column_name}')
+    plt.xticks(rotation=45)
+    plt.show()
+
