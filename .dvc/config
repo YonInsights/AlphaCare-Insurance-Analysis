@@ -1,0 +1,4 @@
+[core]
+    remote = localstorage
+['remote "localstorage"']
+    url = D:\Kifya_training\Week 3\Week 3\storage
