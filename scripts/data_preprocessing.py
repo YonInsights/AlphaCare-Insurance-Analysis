@@ -19,24 +19,6 @@ def handle_missing_values(df: pd.DataFrame, strategy: str = 'drop') -> pd.DataFr
     
     return df
 
-def handle_missing_values(df: pd.DataFrame, strategy: str = 'drop') -> pd.DataFrame:
-    """
-    Handles missing values in the DataFrame.
-    Parameters:
-        df (pd.DataFrame): The DataFrame to process.
-        strategy (str): The strategy to handle missing values ('drop' or 'fill').
-    Returns:
-        pd.DataFrame: The processed DataFrame.
-    """
-    if strategy == 'drop':
-        df = df.dropna()
-    elif strategy == 'fill':
-        df = df.fillna(df.mean())  # You can modify this strategy as needed
-    else:
-        raise ValueError("Strategy must be 'drop' or 'fill'")
-    
-    return df
-
 def convert_data_types(df: pd.DataFrame, column_types: dict) -> pd.DataFrame:
     """
     Converts columns in the DataFrame to the specified data types.
