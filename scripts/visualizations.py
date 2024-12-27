@@ -208,3 +208,49 @@ def plot_statistical_results(
     plt.ylabel('P-value')
     plt.legend()
     plt.tight_layout()
+
+    # Visualization
+    try:
+        plt.figure(figsize=(15, 5))
+        
+        # Province distributions
+        plt.subplot(1, 2, 1)
+        plot_group_distributions(
+            data=data,
+            numeric_features=['TotalClaims'],
+            group_column='Province'
+        )
+        
+        # Gender distributions
+        plt.subplot(1, 2, 2)
+        plot_group_distributions(
+            data=data,
+            numeric_features=['TotalClaims'],
+            group_column='Gender'
+        )
+        
+        plt.tight_layout()
+        plt.show()
+        
+        # Statistical results visualization
+        plt.figure(figsize=(15, 5))
+        
+        # Province results
+        plt.subplot(1, 2, 1)
+        plot_statistical_results(
+            results=province_results,
+            title='Statistical Tests: Province Differences'
+        )
+        
+        # Gender results
+        plt.subplot(1, 2, 2)
+        plot_statistical_results(
+            results=gender_results,
+            title='Statistical Tests: Gender Differences'
+        )
+        
+        plt.tight_layout()
+        plt.show()
+        
+    except Exception as e:
+        print(f"Error in visualization: {str(e)}")
