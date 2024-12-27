@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 import pandas as pd
+import numpy as np
+from typing import Dict, List
 
 # Plot configuration
 DEFAULT_FIGURE_SIZE = (10, 6)
@@ -145,3 +147,64 @@ def plot_correlation_matrix(
     sns.heatmap(correlation_matrix, annot=True, cmap=DEFAULT_CMAP, center=0)
     plt.title(title)
     save_or_show_plot(save_path)
+def plot_group_distributions(
+    data: pd.DataFrame,
+    numeric_features: List[str],
+    group_column: str,
+    figsize: tuple = (15, 5)
+) -> None:
+    """
+    Plot distribution of numeric features across groups
+    
+    Parameters:
+    - data: DataFrame containing the data
+    - numeric_features: List of numeric features to plot
+    - group_column: Column containing group labels
+    - figsize: Figure size tuple (width, height)
+    """
+    n_features = len(numeric_features)
+    fig, axes = plt.subplots(1, n_features, figsize=figsize)
+    
+    if n_features == 1:
+        axes = [axes]
+    
+    for ax, feature in zip(axes, numeric_features):
+        sns.boxplot(data=data, x=group_column, y=feature, ax=ax)
+        ax.set_title(f'{feature} by {group_column}')
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
+    
+    plt.tight_layout()
+def plot_statistical_results(
+    results: Dict[str, Dict],
+    title: str,
+    figsize: tuple = (10, 6)
+) -> None:
+    """
+    Plot p-values and significance levels for statistical tests
+    
+    Parameters:
+    - results: Dictionary containing test results
+    - title: Title for the plot
+    - figsize: Figure size tuple (width, height)
+    """
+    # Combine numeric and categorical results
+    all_features = {**results['numeric'], **results['categorical']}
+    
+    # Extract features and p-values
+    features = list(all_features.keys())
+    p_values = [results['p_value'] for results in all_features.values()]
+    
+    # Create the plot
+    plt.figure(figsize=figsize)
+    bars = plt.bar(features, p_values)
+    plt.axhline(y=0.05, color='r', linestyle='--', label='Significance Level (α=0.05)')
+    
+    # Color bars based on significance
+    for bar, p_value in zip(bars, p_values):
+        bar.set_color('green' if p_value < 0.05 else 'gray')
+    
+    plt.title(title)
+    plt.xticks(rotation=45, ha='right')
+    plt.ylabel('P-value')
+    plt.legend()
+    plt.tight_layout()
