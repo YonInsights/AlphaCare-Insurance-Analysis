@@ -293,3 +293,18 @@ try:
     
 except Exception as e:
     print(f"Error in visualization: {str(e)}")
+def plot_feature_importance(feature_importance_sorted, top_n=10):
+    """
+    Plots the top N most important features based on their coefficients.
+
+    Parameters:
+    - feature_importance_sorted: Sorted DataFrame of feature importance
+    - top_n: Number of top features to display
+    """
+    # Plot the top N most important features
+    plt.figure(figsize=(10, 6))
+    plt.barh(feature_importance_sorted['Feature'].head(top_n), feature_importance_sorted['Coefficient'].head(top_n))
+    plt.xlabel('Coefficient Value')
+    plt.title(f'Top {top_n} Feature Importance')
+    plt.gca().invert_yaxis()  # Invert y-axis to show the most important features at the top
+    plt.show()

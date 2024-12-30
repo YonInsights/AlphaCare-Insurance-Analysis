@@ -15,24 +15,26 @@ def prepare_data(
     data: pd.DataFrame, 
     numeric_features: List[str], 
     categorical_features: List[str], 
-    target_variable: str
+    target_variable: str,
+    date_features: List[str] = []  # New parameter to handle date columns
 ) -> Tuple[np.ndarray, pd.Series, Dict, List[str]]:
     """
     Prepare the data for model training by handling missing values, encoding categorical variables,
-    and scaling numeric variables.
+    scaling numeric variables, and converting date features.
 
     Parameters:
     data (pd.DataFrame): The input DataFrame.
     numeric_features (List[str]): List of column names that are numeric.
     categorical_features (List[str]): List of column names that are categorical.
     target_variable (str): The name of the target variable column.
+    date_features (List[str]): List of column names that are date features (optional).
 
     Returns:
     Tuple[np.ndarray, pd.Series, Dict, List[str]]: Processed features (X), target variable (y),
     transformers (scalers/encoders), and feature names after preprocessing.
     """
     # Validate columns
-    if not all(col in data.columns for col in numeric_features + categorical_features + [target_variable]):
+    if not all(col in data.columns for col in numeric_features + categorical_features + [target_variable] + date_features):
         raise ValueError("One or more specified columns are not in the DataFrame.")
 
     logging.info("Starting data preparation...")
@@ -44,8 +46,15 @@ def prepare_data(
     logging.info("Filling missing values in categorical features using the mode.")
     data[categorical_features] = data[categorical_features].fillna(data[categorical_features].mode().iloc[0])
 
+    # Convert date features to numerical values (e.g., timestamps)
+    if date_features:
+        logging.info("Converting date features to numerical values (timestamps).")
+        for col in date_features:
+            data[col] = pd.to_datetime(data[col], errors='coerce')
+            data[col] = data[col].astype(np.int64) // 10**9  # Convert to seconds since epoch
+
     # Split data into features (X) and target (y)
-    X = data[numeric_features + categorical_features]
+    X = data[numeric_features + categorical_features + date_features]
     y = data[target_variable]
 
     # Create transformers for preprocessing (imputation, scaling, encoding)
@@ -54,7 +63,7 @@ def prepare_data(
             ('imputer', SimpleImputer(strategy='mean')),
             ('scaler', StandardScaler())
         ]),
-        'categorical': Pipeline(steps=[
+        'categorical': Pipeline(steps=[ 
             ('imputer', SimpleImputer(strategy='most_frequent')),
             ('encoder', OneHotEncoder(handle_unknown='ignore'))
         ])

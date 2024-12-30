@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression, LinearRegression
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import (
     classification_report, 
     confusion_matrix, 
@@ -27,7 +27,7 @@ class InsuranceModel:
         Parameters:
         -----------
         model_type : str
-            Type of model to use ('logistic' or 'random_forest')
+            Type of model to use ('logistic', 'random_forest', 'linear_regression', 'random_forest_regressor')
         """
         self.model_type = model_type
         self.model = self._get_model()
@@ -46,6 +46,13 @@ class InsuranceModel:
                 random_state=42,
                 n_estimators=100,
                 class_weight='balanced'
+            )
+        elif self.model_type == 'linear_regression':
+            return LinearRegression()
+        elif self.model_type == 'random_forest_regressor':
+            return RandomForestRegressor(
+                random_state=42,
+                n_estimators=100
             )
         else:
             raise ValueError(f"Unknown model type: {self.model_type}")
@@ -82,7 +89,7 @@ class InsuranceModel:
         # Perform cross-validation
         cv_scores = cross_val_score(
             self.model, X_train, y_train,
-            cv=cv_folds, scoring='roc_auc'
+            cv=cv_folds, scoring='roc_auc' if self.model_type in ['logistic', 'random_forest'] else 'neg_mean_squared_error'
         )
         
         return {
@@ -115,14 +122,23 @@ class InsuranceModel:
             raise ValueError("Model not trained yet!")
             
         y_pred = self.model.predict(X_test)
-        y_prob = self.model.predict_proba(X_test)[:, 1]
-        
-        return {
-            'classification_report': classification_report(y_test, y_pred),
-            'confusion_matrix': confusion_matrix(y_test, y_pred),
-            'roc_auc': roc_auc_score(y_test, y_prob),
-            'feature_importance': self.get_feature_importance()
-        }
+        evaluation_metrics = {}
+
+        if self.model_type in ['logistic', 'random_forest']:
+            y_prob = self.model.predict_proba(X_test)[:, 1]
+            evaluation_metrics = {
+                'classification_report': classification_report(y_test, y_pred),
+                'confusion_matrix': confusion_matrix(y_test, y_pred),
+                'roc_auc': roc_auc_score(y_test, y_prob),
+                'feature_importance': self.get_feature_importance()
+            }
+        elif self.model_type in ['linear_regression', 'random_forest_regressor']:
+            evaluation_metrics = {
+                'mean_squared_error': mean_squared_error(y_test, y_pred),
+                'r2_score': r2_score(y_test, y_pred)
+            }
+
+        return evaluation_metrics
     
     def get_feature_importance(self) -> pd.Series:
         """Get feature importance scores"""
@@ -197,7 +213,7 @@ def evaluate_model(y_true, y_pred, model_type='classification'):
     y_pred : np.ndarray
         The predicted target values.
     model_type : str, optional
-        Type of model evaluation. Options are 'classification' or 'regression'.
+        Type of model evaluation. Options are 'classification' or 'regression'..
         
     Returns:
     --------
@@ -217,3 +233,30 @@ def evaluate_model(y_true, y_pred, model_type='classification'):
         }
     else:
         raise ValueError(f"Unsupported model type: {model_type}")
+
+def extract_feature_importance(model, feature_names):
+    """
+    Extracts feature importance from the linear regression model.
+
+    Parameters:
+    - model: Trained linear regression model
+    - feature_names: List of feature names
+
+    Returns:
+    - Sorted DataFrame of feature importance with coefficients
+    """
+    # Extract coefficients from the trained model
+    coefficients = model.coef_
+
+    # Match the coefficients with feature names
+    feature_importance = pd.DataFrame({
+        'Feature': feature_names,
+        'Coefficient': coefficients
+    })
+
+    # Sort by absolute value of coefficients to rank features
+    feature_importance['Absolute Coefficient'] = feature_importance['Coefficient'].abs()
+    feature_importance_sorted = feature_importance.sort_values(by='Absolute Coefficient', ascending=False)
+
+    return feature_importance_sorted
+
