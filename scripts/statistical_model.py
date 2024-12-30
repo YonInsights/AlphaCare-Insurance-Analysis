@@ -3,7 +3,13 @@ import numpy as np
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
+from sklearn.metrics import (
+    classification_report, 
+    confusion_matrix, 
+    roc_auc_score, 
+    mean_squared_error, 
+    r2_score
+)
 from typing import Dict, Tuple, Any, Union, List
 import logging
 
@@ -179,3 +185,35 @@ def prepare_insurance_data(
         random_state=42,
         stratify=stratify_data
     )
+
+def evaluate_model(y_true, y_pred, model_type='classification'):
+    """
+    Evaluate the model performance using appropriate metrics.
+    
+    Parameters:
+    -----------
+    y_true : pd.Series or np.ndarray
+        The true target values.
+    y_pred : np.ndarray
+        The predicted target values.
+    model_type : str, optional
+        Type of model evaluation. Options are 'classification' or 'regression'.
+        
+    Returns:
+    --------
+    dict
+        A dictionary of evaluation metrics.
+    """
+    if model_type == 'classification':
+        return {
+            'classification_report': classification_report(y_true, y_pred),
+            'confusion_matrix': confusion_matrix(y_true, y_pred).tolist(),
+            'roc_auc': roc_auc_score(y_true, y_pred)
+        }
+    elif model_type == 'regression':
+        return {
+            'mean_squared_error': mean_squared_error(y_true, y_pred),
+            'r2_score': r2_score(y_true, y_pred)
+        }
+    else:
+        raise ValueError(f"Unsupported model type: {model_type}")

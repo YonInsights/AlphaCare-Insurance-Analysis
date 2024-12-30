@@ -147,11 +147,13 @@ def plot_correlation_matrix(
     sns.heatmap(correlation_matrix, annot=True, cmap=DEFAULT_CMAP, center=0)
     plt.title(title)
     save_or_show_plot(save_path)
+
 def plot_group_distributions(
     data: pd.DataFrame,
     numeric_features: List[str],
     group_column: str,
-    figsize: tuple = (15, 5)
+    figsize: tuple = (15, 5),
+    save_path: Optional[str] = None
 ) -> None:
     """
     Plot distribution of numeric features across groups
@@ -161,6 +163,7 @@ def plot_group_distributions(
     - numeric_features: List of numeric features to plot
     - group_column: Column containing group labels
     - figsize: Figure size tuple (width, height)
+    - save_path: Optional path to save the plot
     """
     n_features = len(numeric_features)
     fig, axes = plt.subplots(1, n_features, figsize=figsize)
@@ -174,10 +177,13 @@ def plot_group_distributions(
         ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
     
     plt.tight_layout()
+    save_or_show_plot(save_path)
+
 def plot_statistical_results(
     results: Dict[str, Dict],
-    title: str,
-    figsize: tuple = (10, 6)
+    title: str = "Statistical Test Results",
+    figsize: tuple = (10, 6),
+    save_path: Optional[str] = None
 ) -> None:
     """
     Plot p-values and significance levels for statistical tests
@@ -186,71 +192,104 @@ def plot_statistical_results(
     - results: Dictionary containing test results
     - title: Title for the plot
     - figsize: Figure size tuple (width, height)
+    - save_path: Optional path to save the plot
     """
+    plt.figure(figsize=figsize)
+    
     # Combine numeric and categorical results
-    all_features = {**results['numeric'], **results['categorical']}
+    all_features = {**results.get('numeric', {}), **results.get('categorical', {})}
     
     # Extract features and p-values
     features = list(all_features.keys())
-    p_values = [results['p_value'] for results in all_features.values()]
+    p_values = [result.get('p_value', 1.0) for result in all_features.values()]
     
     # Create the plot
-    plt.figure(figsize=figsize)
     bars = plt.bar(features, p_values)
     plt.axhline(y=0.05, color='r', linestyle='--', label='Significance Level (α=0.05)')
     
+    plt.title(title)
+    plt.xlabel('Features')
+    plt.ylabel('P-value')
+    plt.xticks(rotation=45, ha='right')
+    plt.legend()
+    
     # Color bars based on significance
     for bar, p_value in zip(bars, p_values):
-        bar.set_color('green' if p_value < 0.05 else 'gray')
+        bar.set_color('green' if p_value <= 0.05 else 'red')
     
-    plt.title(title)
-    plt.xticks(rotation=45, ha='right')
-    plt.ylabel('P-value')
-    plt.legend()
     plt.tight_layout()
+    save_or_show_plot(save_path)
 
-    # Visualization
-    try:
-        plt.figure(figsize=(15, 5))
-        
-        # Province distributions
-        plt.subplot(1, 2, 1)
-        plot_group_distributions(
-            data=data,
-            numeric_features=['TotalClaims'],
-            group_column='Province'
-        )
-        
-        # Gender distributions
-        plt.subplot(1, 2, 2)
-        plot_group_distributions(
-            data=data,
-            numeric_features=['TotalClaims'],
-            group_column='Gender'
-        )
-        
-        plt.tight_layout()
-        plt.show()
-        
-        # Statistical results visualization
-        plt.figure(figsize=(15, 5))
-        
-        # Province results
-        plt.subplot(1, 2, 1)
-        plot_statistical_results(
-            results=province_results,
-            title='Statistical Tests: Province Differences'
-        )
-        
-        # Gender results
-        plt.subplot(1, 2, 2)
-        plot_statistical_results(
-            results=gender_results,
-            title='Statistical Tests: Gender Differences'
-        )
-        
-        plt.tight_layout()
-        plt.show()
-        
-    except Exception as e:
-        print(f"Error in visualization: {str(e)}")
+def plot_predictions_vs_actuals(
+    y_true, 
+    y_pred, 
+    title: str = 'Predictions vs Actuals', 
+    save_path: Optional[str] = None
+):
+    """
+    Plot a scatter plot of predictions vs actual values.
+    
+    Parameters:
+    -----------
+    y_true : pd.Series or np.ndarray
+        The true target values.
+    y_pred : np.ndarray
+        The predicted target values.
+    title : str, optional
+        Title of the plot
+    save_path : str, optional
+        Path to save the plot
+    """
+    plt.figure(figsize=DEFAULT_FIGURE_SIZE)
+    plt.scatter(y_true, y_pred, alpha=0.6)
+    plt.plot([min(y_true), max(y_true)], [min(y_true), max(y_true)], color='red', linestyle='--')
+    plt.xlabel('Actual Values')
+    plt.ylabel('Predicted Values')
+    plt.title(title)
+    save_or_show_plot(save_path)
+
+# Visualization
+try:
+    plt.figure(figsize=(15, 5))
+    
+    # Province distributions
+    plt.subplot(1, 2, 1)
+    plot_group_distributions(
+        data=data,
+        numeric_features=['TotalClaims'],
+        group_column='Province'
+    )
+    
+    # Gender distributions
+    plt.subplot(1, 2, 2)
+    plot_group_distributions(
+        data=data,
+        numeric_features=['TotalClaims'],
+        group_column='Gender'
+    )
+    
+    plt.tight_layout()
+    plt.show()
+    
+    # Statistical results visualization
+    plt.figure(figsize=(15, 5))
+    
+    # Province results
+    plt.subplot(1, 2, 1)
+    plot_statistical_results(
+        results=province_results,
+        title='Statistical Tests: Province Differences'
+    )
+    
+    # Gender results
+    plt.subplot(1, 2, 2)
+    plot_statistical_results(
+        results=gender_results,
+        title='Statistical Tests: Gender Differences'
+    )
+    
+    plt.tight_layout()
+    plt.show()
+    
+except Exception as e:
+    print(f"Error in visualization: {str(e)}")

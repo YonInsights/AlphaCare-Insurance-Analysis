@@ -1,62 +1,45 @@
-import os
-import subprocess
-from typing import Optional
+from insurance_model import initialize_model, train_and_predict
+from statistical_model import evaluate_model
+from visualizations import plot_predictions_vs_actuals
+from data_preparation import prepare_data 
 
-def create_branch(branch_name: str) -> bool:
-    """Create a new git branch"""
-    try:
-        subprocess.run(['git', 'checkout', '-b', branch_name], check=True)
-        return True
-    except subprocess.CalledProcessError:
-        return False
+def run_insurance_model_workflow(data):
+    """
+    Execute the complete model workflow
+    
+    Parameters:
+    -----------
+    data : pd.DataFrame
+        The input dataset
+    
+    Returns:
+    --------
+    dict
+        Model performance metrics and visualization details
+    """
+    # Prepare data
+    X_train, X_test, y_train, y_test = prepare_data(data, target_column='your_target_column')
+    
+    # Initialize the model
+    insurance_model = initialize_model('linear_regression')
+    
+    # Train the model and make predictions
+    predictions = train_and_predict(insurance_model, X_train, y_train, X_test)
+    
+    # Evaluate the model
+    evaluation_metrics = evaluate_model(y_test, predictions, model_type='regression')
+    
+    # Visualize predictions
+    plot_predictions_vs_actuals(y_test, predictions)
+    
+    return {
+        'predictions': predictions,
+        'metrics': evaluation_metrics
+    }
 
-def commit_changes(message: str) -> bool:
-    """Commit changes with a message"""
-    try:
-        subprocess.run(['git', 'add', '.'], check=True)
-        subprocess.run(['git', 'commit', '-m', message], check=True)
-        return True
-    except subprocess.CalledProcessError:
-        return False
-
-def merge_branch(
-    source_branch: str,
-    target_branch: str = 'main',
-    message: Optional[str] = None
-) -> bool:
-    """Merge source branch into target branch"""
-    try:
-        # Checkout target branch
-        subprocess.run(['git', 'checkout', target_branch], check=True)
-        
-        # Merge source branch
-        if message:
-            subprocess.run(
-                ['git', 'merge', source_branch, '-m', message],
-                check=True
-            )
-        else:
-            subprocess.run(['git', 'merge', source_branch], check=True)
-        
-        return True
-    except subprocess.CalledProcessError:
-        return False
-
-def create_pull_request(
-    title: str,
-    body: str,
-    source_branch: str,
-    target_branch: str = 'main'
-) -> bool:
-    """Create a pull request (requires gh CLI)"""
-    try:
-        subprocess.run([
-            'gh', 'pr', 'create',
-            '--title', title,
-            '--body', body,
-            '--base', target_branch,
-            '--head', source_branch
-        ], check=True)
-        return True
-    except subprocess.CalledProcessError:
-        return False
+if __name__ == '__main__':
+    # Example usage
+    import pandas as pd
+    data = pd.read_csv('your_dataset.csv')
+    results = run_insurance_model_workflow(data)
+    print(results['metrics'])
